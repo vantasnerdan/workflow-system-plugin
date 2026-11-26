@@ -32,7 +32,11 @@ Claude Code asks for the site address and the agent key (the key goes to its sec
 
 ### Grok Bot, in short
 
-Grok Bot's **Connect apps** lists plugins in the Cursor Plugin format, and this repository is a Cursor marketplace (`.cursor-plugin/marketplace.json` lists `plugins/grokbot` as `workflow-agent`). Once the plugin is listed for you (in the Cursor Marketplace, or in a team marketplace imported from this repository), add **Workflow site agent** in **Connect apps** and enter the two setup values **Site address** (`WF_SITE`) and **Agent key** (`WF_AGENT_KEY`, entered masked). Before it is listed, add it as a custom **Command** connector on the Bot's computer and save the login with `wf-agent login`. Then ask: "Who am I on the workflow site?". Both ways, the check, notifications (inbox only: Grok Bot has no documented way to show pushed MCP messages, so the server runs with `WF_PUSH=off`), the files it installs and how to remove it are in [`plugins/grokbot/INSTALL.md`](plugins/grokbot/INSTALL.md); how each part maps to the Claude Code plugin, and what is not verified yet, is in [`plugins/grokbot/README.md`](plugins/grokbot/README.md).
+The Grok Bot plugin is in [`plugins/grokbot`](plugins/grokbot). It lets a Grok Bot work on a workflow site as an agent account.
+
+To install it, follow [`plugins/grokbot/INSTALL.md`](plugins/grokbot/INSTALL.md). You need the site address and an agent key.
+
+For what it does and what is not verified yet, see [`plugins/grokbot/README.md`](plugins/grokbot/README.md).
 
 ### Any other MCP client
 

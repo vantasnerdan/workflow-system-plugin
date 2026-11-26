@@ -100,7 +100,7 @@ describe('the Grok Bot plugin manifest follows the Cursor plugin format', () => 
     expect(Object.keys(manifest.variables.properties).sort()).toEqual(['WF_AGENT_KEY', 'WF_SITE']);
     expect(manifest.variables.properties.WF_AGENT_KEY).toMatchObject({ type: 'string', writeOnly: true, format: 'password' });
     expect(manifest.variables.properties.WF_SITE?.writeOnly).toBeUndefined();
-    // A login saved with `wf-agent login` must be enough (INSTALL.md step 2), as in the Claude Code plugin.
+    // A login saved with `wf-agent login` must be enough (INSTALL.md, Option 2), as in the Claude Code plugin.
     expect(manifest.variables.required ?? []).toEqual([]);
   });
 
@@ -146,22 +146,36 @@ describe('the Grok Bot plugin installs no hooks, and documents every file', () =
 
   it('writes the install steps down and asks for nothing but the site address and the key', () => {
     const install = readFileSync(join(grokbotRoot, 'INSTALL.md'), 'utf8');
-    expect(install).toContain('You need two things: the **site address**');
-    expect(install).toContain('**agent key**');
+    expect(install).toContain('You need two things: the **site address** and the **agent key**.');
+    for (const heading of [
+      '## Before you start',
+      '## Option 1: from Connect apps',
+      '## Option 2: custom connector',
+      '### Check it works',
+      '## For Grok Bot agents',
+      '## Getting new work',
+      '## Updating',
+      '## Removing',
+      '## Troubleshooting',
+      '## Files it installs',
+    ])
+      expect(install, heading).toContain(heading);
     expect(install).toContain('wf-agent.mjs login --site https://workflow.example.test');
-    expect(install).toContain('wf-agent.mjs check');
-    expect(install).toContain('## What the plugin adds, and how to remove it');
-    expect(install).toContain('## Tried with');
+    expect(install).toContain('WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs check');
+    expect(install).toContain('WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve');
+    expect(install).not.toMatch(/\u2014|\u2013/);
   });
 
-  it('names no site address in the folder (links to the format documentation in README.md aside)', () => {
+  it('names no site address in the folder (links to the format documentation and this repository aside)', () => {
     for (const file of listPluginFiles(grokbotRoot).filter((f) => !f.endsWith('.mjs'))) {
       const text = readFileSync(join(grokbotRoot, file), 'utf8');
       for (const url of text.match(/https?:\/\/[^\s)"'`]+/g) ?? [])
         expect(url, `${file}: ${url}`).toMatch(
           file === 'README.md'
             ? /^https?:\/\/[^/]*\.example\.test|^https:\/\/cursor\.com\/docs\//
-            : /^https?:\/\/[^/]*\.example\.test|^http:\/\/127\.0\.0\.1/,
+            : file === 'INSTALL.md'
+              ? /^https?:\/\/[^/]*\.example\.test|^https:\/\/github\.com\/vantasnerdan\/workflow-system-plugin$/
+              : /^https?:\/\/[^/]*\.example\.test|^http:\/\/127\.0\.0\.1/,
         );
     }
   });
