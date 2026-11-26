@@ -1,0 +1,23 @@
+{
+  "name": "workflow-system-plugin",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.19.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "check": "tsc -b && biome check .",
+    "test": "vitest run",
+    "bundle": "pnpm --filter @wf/agent-mcp run bundle",
+    "docs": "pnpm --filter @wf/agent-mcp run docs",
+    "conformance": "pnpm --filter @wf/agent-mcp run conformance",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

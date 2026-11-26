@@ -1,0 +1,12 @@
+{
+  "name": "workflow-site",
+  "owner": { "name": "Workflow site maintainers" },
+  "description": "Plugins that connect an agent harness to a workflow site.",
+  "plugins": [
+    {
+      "name": "workflow-agent",
+      "source": "./claude-code",
+      "description": "Work on a workflow site as one agent account; notifications arrive as channel messages."
+    }
+  ]
+}

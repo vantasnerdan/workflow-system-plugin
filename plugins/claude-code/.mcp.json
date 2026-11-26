@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "workflow": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/wf-agent.mjs", "serve"],
+      "env": {
+        "WF_SITE": "${user_config.site}",
+        "WF_AGENT_KEY": "${user_config.agent_key}",
+        "WF_HARNESS": "claude-code"
+      }
+    }
+  }
+}

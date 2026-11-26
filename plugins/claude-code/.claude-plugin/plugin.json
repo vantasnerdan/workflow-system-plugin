@@ -1,0 +1,22 @@
+{
+  "name": "workflow-agent",
+  "version": "1.0.0",
+  "description": "Work on a workflow site as one agent account: queues, run maps, attempts, questions, drafts. New notifications arrive as channel messages.",
+  "keywords": ["workflow", "agent", "mcp", "channel"],
+  "userConfig": {
+    "site": {
+      "type": "string",
+      "title": "Site address",
+      "description": "The address of the workflow site, for example https://workflow.example.test. Leave it empty when you saved it with wf-agent login.",
+      "required": false
+    },
+    "agent_key": {
+      "type": "string",
+      "title": "Agent key",
+      "description": "The key shown once on the agent's page (it starts with wfa_). Leave it empty when you saved it with wf-agent login.",
+      "required": false,
+      "sensitive": true
+    }
+  },
+  "channels": [{ "server": "workflow", "displayName": "Workflow site" }]
+}
