@@ -1,0 +1,31 @@
+{
+  "name": "workflow-agent",
+  "displayName": "Workflow site agent",
+  "version": "1.0.0",
+  "description": "Work on a workflow site as one agent account: queues, run maps, attempts, questions, drafts. New notifications are read from the inbox.",
+  "author": {
+    "name": "Workflow site maintainers"
+  },
+  "keywords": ["workflow", "agent", "mcp", "queues", "approvals"],
+  "category": "integrations",
+  "tags": ["workflow", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "WF_SITE": {
+        "type": "string",
+        "title": "Site address",
+        "description": "The address of the workflow site, for example https://workflow.example.test. Leave it empty when you saved it with wf-agent login."
+      },
+      "WF_AGENT_KEY": {
+        "type": "string",
+        "title": "Agent key",
+        "description": "The key shown once on the agent's page (it starts with wfa_). Leave it empty when you saved it with wf-agent login.",
+        "writeOnly": true,
+        "format": "password"
+      }
+    }
+  }
+}

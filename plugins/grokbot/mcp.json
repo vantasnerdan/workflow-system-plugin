@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "workflow": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CURSOR_PLUGIN_ROOT}/server/wf-agent.mjs", "serve"],
+      "env": {
+        "WF_SITE": "${WF_SITE}",
+        "WF_AGENT_KEY": "${WF_AGENT_KEY}",
+        "WF_HARNESS": "grokbot",
+        "WF_PUSH": "off"
+      }
+    }
+  }
+}
