@@ -1,46 +1,45 @@
-# Grokbot plugin: brief for its builder
+# Workflow site agent plugin for Grok Bot
 
-**State: not built yet.** This folder is the place for the Grokbot plugin. This file is the brief; replace it with the plugin's own README when the plugin exists, and move what stays true of it into `INSTALL.md`.
+This folder is the Grok Bot plugin of the workflow site. A Grok Bot that has it works on a workflow site as one **agent account**, with the same 40 tools, tool names, wording and two skills as the Claude Code plugin in [`../claude-code`](../claude-code). It is a Cursor Plugin (manifest `.cursor-plugin/plugin.json`), the plugin format Grok Bot's **Connect apps** catalogue is built from, and it also loads in Cursor itself.
 
-## The goal
+Install steps, configuration and the connection check are in [`INSTALL.md`](INSTALL.md).
 
-A person who has Grokbot, Node.js 24, a **site address** and an **agent key** can install this folder into Grokbot and have an agent work on a workflow site as that agent account, with the same tools, tool names and wording as the Claude Code plugin in [`../claude-code`](../claude-code).
+## What it adds
 
-## What already exists (do not rebuild it)
+- One MCP (Model Context Protocol) server, `workflow`, started on the Bot's computer as `node server/wf-agent.mjs serve`. It is the same single-file server as the Claude Code plugin, built from `plugins/mcp`, and needs only Node.js 24.
+- Two skills: `work-a-queue` (how to work on the site; generated from the shared instruction text) and `author-a-flow` (turning a description of a process into a draft flow).
+- Two setup values: **Site address** (`WF_SITE`) and **Agent key** (`WF_AGENT_KEY`, marked as a password so it is entered masked).
 
-- **The server.** `plugins/mcp` is a complete MCP server over standard input and output, with the `wf-agent` command line (`serve`, `check`, `login`). It is built into one file with no dependencies: `plugins/claude-code/server/wf-agent.mjs`. `node scripts/copy-server.mjs grokbot` copies it to `plugins/grokbot/server/wf-agent.mjs`, so this folder is installable by itself.
-- **The tool registry.** `plugins/mcp/src/tools` holds every tool independent of MCP. Use it only if Grokbot cannot use an MCP server; otherwise the server above is the whole integration.
-- **The rules.** [`docs/agent-interface.md`](../../docs/agent-interface.md), section "Building a plugin for another harness": nine numbered requirements (interface, tool registry, results and refusals, notifications, files, conformance and the rest). They are the acceptance criteria.
-- **A worked example.** `plugins/claude-code`: manifest, the server entry (`.mcp.json`), two skills, `INSTALL.md`.
+It adds no hooks, rules, commands or agents, and nothing that reads, blocks or changes the Bot's other tool calls.
 
-## The parameters (never built in)
+## Claude Code plugin and Grok Bot plugin, side by side
 
-The server reads these from its environment; the plugin's job is to let the person set them through Grokbot's own configuration, with the key in Grokbot's secret storage if it has one:
+| Claude Code plugin | Grok Bot plugin | Notes |
+|---|---|---|
+| `.claude-plugin/plugin.json` | `.cursor-plugin/plugin.json` | Same name (`workflow-agent`) and version |
+| `.mcp.json`, server `workflow`, `${CLAUDE_PLUGIN_ROOT}` | `mcp.json`, server `workflow`, `${CURSOR_PLUGIN_ROOT}` | Same command: `node <plugin>/server/wf-agent.mjs serve` |
+| `userConfig.site` | variable `WF_SITE` | Optional in both, so a saved `wf-agent login` keeps working |
+| `userConfig.agent_key` (`sensitive: true`) | variable `WF_AGENT_KEY` (`writeOnly`, `format: password`) | The key is never written into a file of the plugin |
+| `WF_HARNESS=claude-code` | `WF_HARNESS=grokbot` | Names the harness in the `User-Agent` and in `whoami` |
+| Channel `workflow` (push as `<channel>` messages) | `WF_PUSH=off`; the inbox, the unread line and, if wanted, a Grok Bot routine that reads the inbox | Grok Bot has no documented way to show an MCP server's pushed message |
+| Skill `work-a-queue` | Skill `work-a-queue` | Same instruction text; the channel paragraph is replaced by the inbox-only paragraph |
+| Skill `author-a-flow` | Skill `author-a-flow` | Identical copy (a test keeps them equal) |
+| MCP server instructions | MCP server instructions | Sent by the same server |
+| `wf-agent login`, `check` | `wf-agent login`, `check` | Same command line, run on the Bot's computer |
+| No hooks | No hooks | Tested |
+| `plugins/.claude-plugin/marketplace.json` and the root `.claude-plugin/marketplace.json` | Root `.cursor-plugin/marketplace.json` | Lets Cursor (and a team marketplace) read this repository as a marketplace |
+| `INSTALL.md` | `INSTALL.md` | |
 
-| Variable | Meaning |
-|---|---|
-| `WF_SITE` | The site address, an `https://` origin. No address is ever written into this repository: examples use `https://workflow.example.test` |
-| `WF_AGENT_KEY` | The agent key (`wfa_...`). Never in a file of this repository, a log, or a command line that lands in shell history |
-| `WF_HARNESS` | Set it to `grokbot`. It names the harness in the `User-Agent` and in what `whoami` reports |
-| `WF_PUSH` | `off` stops the server from holding the event stream open. See "Notifications" below |
+## The format this follows
 
-When both `WF_SITE` and `WF_AGENT_KEY` are empty the server falls back to the login saved by `wf-agent login` (`~/.config/wf-agent/config.json`), so that path must keep working too.
+- Cursor's plugin documentation, read on 26 November 2026: [Plugins](https://cursor.com/docs/plugins) and the [Plugins reference](https://cursor.com/docs/reference/plugins) (manifest fields, `variables`, `mcp.json`, `${CURSOR_PLUGIN_ROOT}`, folder discovery of skills, `.cursor-plugin/marketplace.json` for a repository with several plugins, the submission checklist).
+- The schema and validator of Cursor's official plugin repository, `cursor/plugins` at commit `b7b93c3` (`schemas/plugin.schema.json`, `schemas/marketplace.schema.json`, `scripts/validate-plugins.mjs`). The schema's `minClientVersions` names Grok Bot (`grokbot`) as a client of the same plugins. Marking a secret variable with `writeOnly: true` and `format: password` follows plugins listed there.
+- Grok Bot's documentation on docs.x.ai, read on 26 November 2026: "Use the computer and apps" (Bots work from a cloud computer; **Connect apps**; a custom connector of type **Command** takes a command and its arguments and runs on the Bot's computer) and "Skills and routines" (routines).
 
-## What to build
+## Not verified yet
 
-1. **Find out how Grokbot is extended today.** Read its current documentation for plugins or extensions, MCP server configuration, per-plugin options and secrets, skills or instruction files, and any way to show a pushed message in a session. Write down the version you built against. Do not rely on memory of an older version.
-2. **The plugin files** in this folder, in Grokbot's own format: a manifest; the entry that starts `node <this folder>/server/wf-agent.mjs serve` with the four variables above; the two skills of `../claude-code/skills` carried over in Grokbot's format for instructions (same content: `work-a-queue` is generated from `plugins/mcp/src/instructions.ts` by `pnpm docs`, so generate yours the same way rather than copying text by hand if Grokbot needs a different file shape).
-3. **Notifications.** The inbox (`inbox: N unread` at the end of every tool result, and the inbox tools) is the baseline and must work alone. The server can also push new items as MCP channel notifications, which Claude Code shows in the session. If Grokbot can show a pushed message visibly, wire it; if it cannot, set `WF_PUSH=off` and say so in `INSTALL.md`. Never add hooks that read or change the person's other tool calls.
-4. **`INSTALL.md`**: install, give the two values, check the connection (`wf-agent.mjs check` and a first tool call from a Grokbot session), remove. Every command in it must be one you ran; end with a "Tried with" paragraph naming the Grokbot version, as `../claude-code/INSTALL.md` does.
-5. **Wire it in**: add the folder to the table in the root `README.md`; if `plugins/mcp/scripts/bundle.ts` or the docs generator should also write into this folder, change them and their tests together (`plugins/mcp/test/plugin-files.test.ts` checks that the shipped files are current and listed).
-
-## Notes for Grokbot
-
-Nothing about Grokbot's extension format is assumed here. Start with step 1. If Grokbot cannot start a local MCP server over standard input and output, bind the tool registry directly (requirement 2 of the reference) and keep the tool names.
-
-## Done means
-
-- `pnpm check` and `pnpm test` pass.
-- The conformance script passes with this plugin's server command against a **test** site (`WF_CONFORMANCE_SERVER`, see the root README). It changes data, so never run it against a site people work on.
-- A fresh Grokbot session, with only the site address and the key given, answers "Who am I on the workflow site?" and "What is in my queue?" through the plugin's tools.
-- No site address, key, person or company name anywhere in the folder.
+- **Installing from a marketplace in Grok Bot.** The plugin is not listed anywhere yet, so it has not been added through **Connect apps**. Cursor documents that `${CURSOR_PLUGIN_ROOT}` and the variables are filled in for a plugin's command server; that Grok Bot does the same for a marketplace plugin's command server on the Bot's computer is not documented, and the server startup was tested with the substitution done by the test, not by Grok Bot.
+- **How setup values are shown in Grok Bot.** Whether Grok Bot asks for optional variables at install time, and whether it keeps a `writeOnly` variable in secret storage, is not documented.
+- **Pushed notifications.** No documented way exists to show an MCP server's own notifications in a Grok Bot chat, so push is off. If Grok Bot adds one, the server already speaks it (`WF_PUSH` on, `notifications/claude/channel`) and only `mcp.json` and the skill text change.
+- **Conformance against a real test site.** It was run against the repository's in-memory fake site only (see "Tried with" in `INSTALL.md`).
+- **The Add a custom connector form.** Way B of `INSTALL.md` was run as the same command line on the Bot's computer, not entered through the form.

@@ -1,0 +1,12 @@
+{
+  "name": "workflow-site",
+  "owner": { "name": "Workflow site maintainers" },
+  "metadata": { "description": "Plugins that connect an agent harness to a workflow site." },
+  "plugins": [
+    {
+      "name": "workflow-agent",
+      "source": "plugins/grokbot",
+      "description": "Work on a workflow site as one agent account from Grok Bot (or Cursor); notifications are read from the inbox."
+    }
+  ]
+}

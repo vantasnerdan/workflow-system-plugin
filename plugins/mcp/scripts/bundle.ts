@@ -1,7 +1,7 @@
 /**
- * Builds the single-file server the Claude Code plugin runs: `plugins/claude-code/server/wf-agent.mjs`,
- * from `src/cli.ts` with every dependency inside, so an installer needs only Node.js 24 (no install
- * step, no package registry). `pnpm --filter @wf/agent-mcp bundle`; a test checks the file is current.
+ * Builds the single-file server the harness plugins run: `plugins/claude-code/server/wf-agent.mjs`, and
+ * the same file in `plugins/grokbot/server/wf-agent.mjs`, from `src/cli.ts` with every dependency inside, so an installer needs only Node.js 24 (no install
+ * step, no package registry). `pnpm --filter @wf/agent-mcp bundle`; a test checks the files are current.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -11,6 +11,8 @@ import { build } from 'esbuild';
 const here = dirname(fileURLToPath(import.meta.url));
 export const pluginRoot = resolve(here, '..');
 export const bundlePath = resolve(pluginRoot, '../claude-code/server/wf-agent.mjs');
+/** The copy the Grok Bot plugin ships (its folder must be installable by itself). */
+export const grokbotBundlePath = resolve(pluginRoot, '../grokbot/server/wf-agent.mjs');
 
 const BANNER = [
   '#!/usr/bin/env node',
@@ -41,7 +43,9 @@ export async function bundleText(): Promise<string> {
 
 if (import.meta.main) {
   const text = await bundleText();
-  mkdirSync(dirname(bundlePath), { recursive: true });
-  writeFileSync(bundlePath, text, { mode: 0o755 });
-  process.stdout.write(`${bundlePath} (${text.length} bytes)\n`);
+  for (const path of [bundlePath, grokbotBundlePath]) {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, text, { mode: 0o755 });
+    process.stdout.write(`${path} (${text.length} bytes)\n`);
+  }
 }
