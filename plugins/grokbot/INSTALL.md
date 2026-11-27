@@ -9,8 +9,11 @@ You need two things: the **site address** and the **agent key**.
 - [ ] **Site address.** The web address of your workflow site, for example `https://workflow.example.test`. Ask the person who runs the site if you do not know it.
 - [ ] **Agent key.** A key that starts with `wfa_`. The agent's owner creates it on the agent's page on the site. The site shows it only once, so copy it then.
 - [ ] **Keep the key private.** Never paste the key into a chat message.
+- [ ] **Groups and roles.** When you create the agent on the site, do not add it to the Publisher group unless that bot should draft and publish flows. A bot in Publisher can publish a template for the whole organisation. Do not give a client bot Publisher membership unless it should draft and publish.
 
 The plugin runs a small program on the Bot's own computer. That computer needs Node.js 24. The Grok Bot computer we tested had Node.js 24.22.1.
+
+A computer keeps only one saved login (see [One login per computer](#one-login-per-computer)). Running `wf-agent login` again overwrites it.
 
 ## Option 1: from Connect apps
 
@@ -83,24 +86,56 @@ Use this today. You copy the plugin onto the Bot's computer, save the site addre
    ```
 
 10. Pick the type **Command**.
-11. Enter the command:
+11. The next fields have two forms that both work. Use the one that matches the form you see.
 
-    ```
-    env
-    ```
+    **Form A.** If you have only a command field and an arguments field:
 
-12. Enter the arguments, with `<plugin>` replaced by the path from step 2:
+    - Command:
 
-    ```
-    WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve
-    ```
+      ```
+      env
+      ```
 
-13. Choose **Add plugin**.
+    - Arguments, with `<plugin>` replaced by the path from step 2:
 
-Instead of steps 8 to 13 you can ask the Bot to add it. Grok Bot documents that a Bot can add a server that runs as a command on its computer:
+      ```
+      WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve
+      ```
+
+    **Form B.** If you also have an environment field (this is the form we used on a Grok Bot computer):
+
+    - Command:
+
+      ```
+      node
+      ```
+
+    - Arguments, with `<plugin>` replaced by the path from step 2:
+
+      ```
+      <plugin>/server/wf-agent.mjs serve
+      ```
+
+    - Environment:
+
+      - `WF_HARNESS`: `grokbot`
+      - `WF_PUSH`: `off`
+
+    Do not put the agent key in these fields. The site address and key come from the saved login.
+12. Choose **Add plugin**.
+
+Instead of steps 8 to 12 you can ask the Bot to add it. Grok Bot documents that a Bot can add a server that runs as a command on its computer. Give it one of the two forms below.
 
 ```
-Add a custom MCP server named workflow. Command: env. Arguments: WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve
+Add a custom Model Context Protocol (MCP) server named workflow.
+If your tool has separate fields for command, arguments and environment, use:
+Command: node
+Arguments: <plugin>/server/wf-agent.mjs serve
+Environment: WF_HARNESS=grokbot and WF_PUSH=off
+If your tool has only command and arguments, use:
+Command: env
+Arguments: WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve
+Do not put the agent key in the command, the arguments, or the chat.
 ```
 
 ### Check it works
@@ -120,6 +155,37 @@ Add a custom MCP server named workflow. Command: env. Arguments: WF_HARNESS=grok
 
    The answer has the same lines as in Option 1: `Site`, `Connected as`, `Owner` and `Notifications: inbox only`.
 
+## One login per computer
+
+The command `wf-agent login` saves one site address and one agent key in `~/.config/wf-agent/config.json`. There is only one saved login per computer. Running login again overwrites that file. After an overwrite, every connector on that computer that uses the saved login (and does not set `WF_SITE` and `WF_AGENT_KEY` itself) will act as the new account.
+
+To run a second agent account on the same computer, do not run login again for that account. Add a second custom connector and put the second site address and key in that connector's environment. Type the key in the environment field, never in a chat.
+
+1. Ask the second agent's owner to create an agent key on the site. They must not paste it in chat.
+2. In **Connect apps**, add a custom connector with a distinct name, for example `workflow-client`.
+3. Use Form B from Option 2 (command `node`, arguments, and environment). Set all four environment values:
+
+   - `WF_SITE`: the site address
+   - `WF_AGENT_KEY`: the agent key (type it in the masked field, never in chat)
+   - `WF_HARNESS`: `grokbot`
+   - `WF_PUSH`: `off`
+
+4. Leave the first bot's saved login as it is. The environment values on the second connector override the saved login for that connector only.
+
+If you asked a Bot to add the second connector, give it this block, with `<plugin>` and the site address filled in. Do not put the agent key in the chat. Ask the user to type the key in the connector's environment field themselves:
+
+```
+Add a second custom MCP server with a distinct name, for example workflow-client.
+Command: node
+Arguments: <plugin>/server/wf-agent.mjs serve
+Environment:
+  WF_SITE=<site address>
+  WF_AGENT_KEY= (ask the user to type the key in this field; do not accept it in chat)
+  WF_HARNESS=grokbot
+  WF_PUSH=off
+Do not run wf-agent login for this second account. Login would overwrite the saved login the first bot uses.
+```
+
 ## For Grok Bot agents
 
 Follow these steps literally when your user asks you to install this plugin. Do not skip a step. Stop and report if a step fails.
@@ -130,11 +196,12 @@ Follow these steps literally when your user asks you to install this plugin. Do 
    git clone https://github.com/vantasnerdan/workflow-system-plugin "$HOME/workflow-system-plugin"
    ```
 
-   If the folder already exists, run `git -C "$HOME/workflow-system-plugin" pull` instead.
+   If the folder already exists, run `git -C "$HOME/workflow-system-plugin" pull` instead. If other bots on this computer already use that folder, tell your user before you pull, because a pull changes the plugin for all of them.
 2. Run `echo "$HOME/workflow-system-plugin/plugins/grokbot"`. Use the printed path as `<plugin>` in every later step. Always use the full path, never `~`.
 3. Run `node --version`. If it does not start with `v24` or a higher number, stop and tell your user that Node.js 24 is needed.
 4. Ask your user for the **site address**. It is not secret. Check that it starts with `https://` (or `http://` for a test site).
-5. Do **not** ask your user to send the agent key in chat. Tell your user exactly this, with `<plugin>` and the site address filled in:
+5. Check whether `~/.config/wf-agent/config.json` already exists (look at the path and file mode only; never print the file). If it exists, another bot on this computer may already have a saved login. Do not run login, because login overwrites that file. Instead, add this bot's connector with `WF_SITE` and `WF_AGENT_KEY` in the connector's environment, as in [One login per computer](#one-login-per-computer), and skip to the check in step 6 after the user has typed the key in the environment field. If the file does not exist, continue with the login below.
+6. Do **not** ask your user to send the agent key in chat. Tell your user exactly this, with `<plugin>` and the site address filled in:
 
    ```
    Please open a terminal on my computer and run:
@@ -143,28 +210,39 @@ Follow these steps literally when your user asks you to install this plugin. Do 
    Tell me when it says "Saved".
    ```
 
-6. Wait until your user says it is saved. Then run:
+7. Wait until your user says it is saved. Then run:
 
    ```
    env WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs check
    ```
 
    Exit code 0 means it worked. Any other code: look it up in the Troubleshooting table below, tell your user the fix, and stop.
-7. Add a custom MCP (Model Context Protocol) server with your tool for adding MCP servers. Use exactly:
+8. Add a custom MCP (Model Context Protocol) server with your tool for adding MCP servers. Prefer the form that matches your tool.
+
+   If your tool has separate fields for command, arguments and environment, use this form (this is the form we used):
+
+   - Name: `workflow`
+   - Command: `node`
+   - Arguments: `<plugin>/server/wf-agent.mjs serve`
+   - Environment: `WF_HARNESS=grokbot` and `WF_PUSH=off`
+
+   If your tool has only command and arguments, use this form:
 
    - Name: `workflow`
    - Command: `env`
    - Arguments: `WF_HARNESS=grokbot WF_PUSH=off node <plugin>/server/wf-agent.mjs serve`
 
-   Never put the agent key in the command or the arguments.
-8. The new tools are ready from your next message. Tell your user to send any message, for example `Check the workflow connection`.
-9. On that next turn, call the `whoami` tool of the `workflow` server. Then call `queue_list`.
-10. Report to your user:
+   Never put the agent key in the command, the arguments, or the chat. With this first connector, the site address and key come from the saved login.
+9. The new tools are ready from your next message. Tell your user to send any message, for example `Check the workflow connection`.
+10. On that next turn, call the `whoami` tool of the `workflow` server. Then call `queue_list`.
+11. Report to your user:
     - the agent name and owner (the `Connected as` and `Owner` lines),
     - the site address,
     - the `Notifications` line,
     - how many items are in the queue,
     - that new work arrives in the inbox only, and that you can set up a routine to check it (see Getting new work).
+
+    If this bot is for a client, remind your user not to add it to the Publisher group unless it should draft and publish.
 
 ## Getting new work
 
@@ -188,10 +266,15 @@ Follow these steps literally when your user asks you to install this plugin. Do 
 
   The check shows the plugin version in the line `Interface version: ... (plugin 1.0.0)`. If the Bot still uses the old version, remove the custom connector and add it again.
 
+  If more than one bot on this computer uses that folder, a pull changes the plugin for all of them. Tell your user before you pull.
+
 ## Removing
 
-1. In **Connect apps**, remove **Workflow site agent** or the `workflow` custom connector.
-2. If you used Option 2, ask your Bot:
+Bots that share one computer share the saved login (`~/.config/wf-agent`) and the cloned folder (`~/workflow-system-plugin`). Do not delete those folders while other bots still use them.
+
+1. In **Connect apps**, remove only this bot's connector (**Workflow site agent**, or the `workflow` or `workflow-client` custom connector).
+2. If other bots on this computer still use the plugin, stop here. Leave `~/.config/wf-agent`, `~/.local/state/wf-agent` and `~/workflow-system-plugin` in place.
+3. If you used Option 2, and no other bot on this computer uses the plugin, ask your Bot:
 
    ```
    Delete the folders ~/.config/wf-agent, ~/.local/state/wf-agent and ~/workflow-system-plugin.
@@ -211,6 +294,7 @@ Grok Bot is then exactly as before. The plugin adds no hooks, so nothing else ch
 | `node --version` shows a version below 24 | Install Node.js 24 on the Bot's computer. |
 | The Bot says it has no workflow tools | Send one more message. New tools are ready from the next message. Then check the connector is listed in **Connect apps**. |
 | The Bot answers "inbox: N unread" but you got no alert | This is expected. Push is off. Ask for the inbox, or set up the routine in Getting new work. |
+| Two bots on the same computer suddenly show the same agent | Login was overwritten. Restore the first bot's login, then put the second account's site and key in that connector's environment (see [One login per computer](#one-login-per-computer)). |
 
 ## Files it installs
 
